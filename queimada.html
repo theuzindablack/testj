@@ -1,0 +1,219 @@
+ <!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>QUEIMADA: CROSS-PLATFORM</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Arial', sans-serif; }
+        
+        #login-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: flex; flex-direction: column; justify-content: center; align-items: center;
+            z-index: 2000; color: white;
+        }
+        #player-input { padding: 15px; font-size: 18px; border-radius: 10px; border: 2px solid #ffcc00; background: #222; color: white; margin-bottom: 20px; text-align: center; }
+        #start-button { padding: 15px 40px; font-size: 20px; background: #ffcc00; color: #000; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
+
+        #ui { position: absolute; top: 10px; width: 100%; text-align: center; color: white; z-index: 10; font-size: 20px; text-shadow: 2px 2px #000; pointer-events: none; }
+        #btn-ranking { position: absolute; top: 15px; left: 15px; width: 50px; height: 50px; background: #ffcc00; border-radius: 10px; border: 3px solid #fff; font-size: 25px; cursor: pointer; z-index: 100; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        
+        #ranking-panel { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 300px; background: rgba(0,0,0,0.9); border: 2px solid #ffcc00; border-radius: 15px; padding: 20px; color: white; display: none; z-index: 200; text-align: center; }
+        #ranking-list { list-style: none; padding: 0; margin: 15px 0; font-size: 18px; }
+        #ranking-list li { margin-bottom: 8px; border-bottom: 1px solid #333; padding-bottom: 5px; }
+        .close-rank { background: #ff4444; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+
+        /* CONTROLES MOBILE */
+        #joystick { position: absolute; bottom: 30px; left: 30px; width: 80px; height: 80px; background: rgba(255,255,255,0.2); border-radius: 50%; border: 2px solid #fff; }
+        #stick { position: absolute; top: 20px; left: 20px; width: 40px; height: 40px; background: #fff; border-radius: 50%; }
+        #btn-throw { position: absolute; bottom: 30px; right: 30px; width: 100px; height: 100px; background: #00ff00; border-radius: 50%; border: 5px solid #fff; font-weight: bold; display: none; color: #000; }
+        
+        #overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 1000; color: white; flex-direction: column; }
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <h1 style="color:#ffcc00">QUEIMADA 3D</h1>
+    <input type="text" id="player-input" placeholder="SEU NOME">
+    <button id="start-button">ENTRAR</button>
+</div>
+
+<div id="ui">PONTOS: <span id="score-val">0</span> | <span id="display-name"></span></div>
+<button id="btn-ranking">🏆</button>
+
+<div id="ranking-panel">
+    <h3>🌍 TOP GLOBAL</h3>
+    <ul id="ranking-list"></ul>
+    <button class="close-rank" onclick="toggleRanking()">FECHAR</button>
+</div>
+
+<div id="overlay">
+    <h1 id="result-text"></h1>
+    <button onclick="location.reload()" style="padding:15px 30px; font-size:20px;">JOGAR DE NOVO</button>
+</div>
+
+<div id="mobile-controls">
+    <div id="joystick"><div id="stick"></div></div>
+    <button id="btn-throw">LANÇAR!</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+    // --- DETECTOR DE DISPOSITIVO ---
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    if(!isMobile) {
+        document.getElementById('mobile-controls').style.display = 'none';
+        console.log("Modo PC ativado: Use WASD/Setas e Espaço");
+    }
+
+    let playerName = localStorage.getItem('player_name') || "";
+    let myScore = parseInt(localStorage.getItem('dodgeball_wins')) || 0;
+    let gameStarted = false;
+
+    if (playerName) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('display-name').innerText = playerName;
+        gameStarted = true;
+    }
+
+    document.getElementById('start-button').onclick = () => {
+        const input = document.getElementById('player-input').value.trim();
+        if(input.length > 1) {
+            playerName = input;
+            localStorage.setItem('player_name', playerName);
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('display-name').innerText = playerName;
+            gameStarted = true;
+        }
+    };
+
+    // --- RANKING ---
+    document.getElementById('score-val').innerText = myScore;
+    function updateRankingUI() {
+        const list = document.getElementById('ranking-list');
+        list.innerHTML = "";
+        const data = [{name: "ProPlayer", wins: 100}, {name: "Você ("+playerName+")", wins: myScore}].sort((a,b)=>b.wins-a.wins);
+        data.forEach((p, i) => {
+            const li = document.createElement('li');
+            li.innerHTML = `<b>#${i+1}</b> ${p.name} — ${p.wins} pts`;
+            list.appendChild(li);
+        });
+    }
+    document.getElementById('btn-ranking').onclick = () => {
+        const p = document.getElementById('ranking-panel');
+        p.style.display = p.style.display === 'block' ? 'none' : 'block';
+        if(p.style.display === 'block') updateRankingUI();
+    };
+
+    // --- JOGO ---
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({antialias: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+    scene.add(new THREE.AmbientLight(0xffffff, 1));
+
+    const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 120), new THREE.MeshBasicMaterial({ color: 0x111 }));
+    floor.rotation.x = -Math.PI/2; scene.add(floor);
+    const midLine = new THREE.Mesh(new THREE.PlaneGeometry(60, 1.5), new THREE.MeshBasicMaterial({ color: 0xff0000 }));
+    midLine.rotation.x = -Math.PI/2; midLine.position.y = 0.2; scene.add(midLine);
+
+    const player = new THREE.Mesh(new THREE.BoxGeometry(5, 8, 5), new THREE.MeshBasicMaterial({ color: 0x00ff00 }));
+    player.position.set(0, 4, 40); scene.add(player);
+    const enemy = new THREE.Mesh(new THREE.BoxGeometry(5, 8, 5), new THREE.MeshBasicMaterial({ color: 0xff00ff }));
+    enemy.position.set(0, 4, -45); scene.add(enemy);
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(2.5, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffff00 }));
+    ball.position.set(0, 2.5, 15); scene.add(ball);
+
+    let ballState = "SOLTA", owner = "NINGUEM", ballVel = new THREE.Vector3();
+    let move = {x:0, z:0}, gameActive = true;
+
+    // CONTROLES MOBILE
+    window.addEventListener('touchmove', (e) => {
+        if(!gameActive || !gameStarted || !isMobile) return;
+        const t = e.touches[0], r = document.getElementById('joystick').getBoundingClientRect();
+        let dx = t.clientX - (r.left + 40), dz = t.clientY - (r.top + 40);
+        const d = Math.sqrt(dx*dx + dz*dz); if(d > 30) { dx *= 30/d; dz *= 30/d; }
+        document.getElementById('stick').style.transform = `translate(${dx}px, ${dz}px)`;
+        move.x = dx/30; move.z = dz/30;
+    });
+    window.addEventListener('touchend', () => { move = {x:0, z:0}; if(isMobile) document.getElementById('stick').style.transform = 'translate(0,0)'; });
+
+    // CONTROLES PC (ADICIONADOS)
+    const keys = {};
+    window.addEventListener('keydown', (e) => keys[e.code] = true);
+    window.addEventListener('keyup', (e) => keys[e.code] = false);
+
+    function handlePCInput() {
+        if(!gameActive || isMobile) return;
+        move.x = 0; move.z = 0;
+        if(keys['ArrowLeft'] || keys['KeyA']) move.x = -1;
+        if(keys['ArrowRight'] || keys['KeyD']) move.x = 1;
+        if(keys['ArrowUp'] || keys['KeyW']) move.z = -1;
+        if(keys['ArrowDown'] || keys['KeyS']) move.z = 1;
+        if(keys['Space'] && owner === "PLAYER") lancarBola();
+    }
+
+    function lancarBola() {
+        ballState = "VOANDO_PLAYER"; owner = "NINGUEM";
+        ballVel.set((enemy.position.x - player.position.x) * 0.22, 0, -7.5);
+    }
+
+    document.getElementById('btn-throw').onclick = lancarBola;
+
+    function animate() {
+        if(!gameActive || !gameStarted) { requestAnimationFrame(animate); return; }
+        requestAnimationFrame(animate);
+
+        if(!isMobile) handlePCInput();
+
+        player.position.x = Math.max(-27, Math.min(27, player.position.x + move.x * 1.5));
+        player.position.z = Math.max(5, Math.min(55, player.position.z + move.z * 1.5));
+
+        // Lógica da IA (Sua original)
+        if(ballState === "SOLTA" && ball.position.z < 0) {
+            enemy.position.x += Math.sign(ball.position.x - enemy.position.x) * 1.2;
+            enemy.position.z += Math.sign(ball.position.z - enemy.position.z) * 1.2;
+        } else if (owner !== "ENEMY") {
+            enemy.position.x += Math.sin(Date.now()*0.005) * 1.8;
+            enemy.position.z += ((-45) - enemy.position.z) * 0.1;
+        }
+
+        if(owner === "PLAYER") ball.position.set(player.position.x, 6, player.position.z - 6);
+        else if(owner === "ENEMY") {
+            ball.position.set(enemy.position.x, 6, enemy.position.z + 6);
+            if(Math.random() < 0.03) { ballState = "VOANDO_ENEMY"; owner = "NINGUEM"; ballVel.set((player.position.x - enemy.position.x)*0.16, 0, 6.5); }
+        }
+
+        if(ballState.includes("VOANDO")) {
+            ball.position.add(ballVel);
+            if(Math.abs(ball.position.x) > 28) ballVel.x *= -1;
+            if(Math.abs(ball.position.z) > 58) { ballVel.z *= -0.7; ballState = "SOLTA"; }
+            if(ballState === "VOANDO_PLAYER" && ball.position.distanceTo(enemy.position) < 6) {
+                gameActive = false; myScore++; localStorage.setItem('dodgeball_wins', myScore);
+                document.getElementById('overlay').style.display = 'flex';
+                document.getElementById('result-text').innerText = "VITÓRIA!";
+            }
+            if(ballState === "VOANDO_ENEMY" && ball.position.distanceTo(player.position) < 6) {
+                gameActive = false; document.getElementById('overlay').style.display = 'flex';
+                document.getElementById('result-text').innerText = "DERROTA!";
+            }
+        }
+
+        if(ballState === "SOLTA" && ball.position.z > 0 && player.position.distanceTo(ball.position) < 12) { owner = "PLAYER"; ballState = "POSSE"; }
+        if(ballState === "SOLTA" && ball.position.z < 0 && enemy.position.distanceTo(ball.position) < 8) { owner = "ENEMY"; ballState = "POSSE"; }
+
+        if(isMobile) document.getElementById('btn-throw').style.display = (owner === "PLAYER") ? "block" : "none";
+        
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        
+        camera.position.set(0, 110, 130); camera.lookAt(0, 0, 0);
+        renderer.render(scene, camera);
+    }
+    animate();
+</script>
+</body>
+</html>

@@ -3,165 +3,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 GAMES - MULTIPLATAFORMA</title>
+    <title>2026 GAMES | Jogue Grátis</title>
     <style>
-        /* RESET TOTAL */
+        /* ESTILO INSPIRADO NO POKI */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
-        html, body {
-            width: 100%;
-            height: 100%;
-            background: #050505;
+        body {
+            background: #2c1a4d; /* Roxo escuro clássico de portais de jogos */
             color: #fff;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             overflow-x: hidden;
         }
 
-        /* MENU DE SELEÇÃO */
-        .portal {
+        /* BARRA SUPERIOR */
+        header {
+            background: #3b2566;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            font-weight: bold;
+            font-size: 24px;
+            letter-spacing: 1px;
+        }
+
+        /* GRID DE JOGOS */
+        .container {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* CARD DO JOGO (OS TILES) */
+        .game-card {
+            aspect-ratio: 1 / 1;
+            background: #5c3eb3;
+            border-radius: 18px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            min-height: 100vh;
-            padding: 20px;
-            background: radial-gradient(circle, #111 0%, #000 100%);
-        }
-
-        h1 { 
-            margin-bottom: 50px; 
-            letter-spacing: 4px;
-            text-align: center;
-            color: #00ff41;
-            text-shadow: 0 0 10px #00ff41;
-        }
-
-        .grid-jogos { 
-            display: flex; 
-            gap: 25px; 
-            flex-wrap: wrap; 
-            justify-content: center; 
-        }
-
-        /* BOTÃO PADRÃO */
-        .btn-play {
-            padding: 20px 40px;
-            background: transparent;
-            font-size: 16px;
-            font-weight: bold;
-            text-transform: uppercase;
             cursor: pointer;
-            border-radius: 8px;
-            transition: 0.3s;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+            overflow: hidden;
+            border-bottom: 6px solid rgba(0,0,0,0.2);
+            text-decoration: none;
+            color: white;
         }
 
-        /* ESTILO JOGO 1 (VERDE) */
-        .btn-city {
-            color: #00ff41;
-            border: 2px solid #00ff41;
-        }
-        .btn-city:hover {
-            background: #00ff41;
-            color: #000;
-            box-shadow: 0 0 30px #00ff41;
+        .game-card:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.4);
         }
 
-        /* ESTILO JOGO 2 (ROSA) */
-        .btn-escape {
-            color: #ff0055;
-            border: 2px solid #ff0055;
-        }
-        .btn-escape:hover {
-            background: #ff0055;
-            color: #fff;
-            box-shadow: 0 0 30px #ff0055;
+        /* ÍCONES DOS JOGOS (Emoji grande para simular ícone) */
+        .game-icon {
+            font-size: 60px;
+            margin-bottom: 10px;
         }
 
-        /* CAMADA DO JOGO (FULLSCREEN) */
+        .game-title {
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+            text-align: center;
+            padding: 0 5px;
+        }
+
+        /* CORES DIFERENTES PARA CADA CARD */
+        .card-1 { background: #00ff88; color: #000; } /* Verde para City Chase */
+        .card-2 { background: #ff0055; color: #fff; } /* Rosa para Escape Roads */
+
+        /* OVERLAY DO JOGO (FULLSCREEN) */
         #game-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background: #000;
             z-index: 9999;
             display: none;
         }
 
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-            display: block;
-        }
+        iframe { width: 100%; height: 100%; border: none; }
 
-        /* TELA DE LOADING */
+        /* BOTÃO SAIR ESTILO POKI */
+        .btn-exit {
+            position: absolute;
+            top: 15px; right: 15px;
+            background: #fff; color: #000;
+            border: none; padding: 12px 20px;
+            border-radius: 30px; cursor: pointer;
+            font-weight: bold; z-index: 10001;
+            box-shadow: 0 4px 0 #ccc;
+        }
+        .btn-exit:active { transform: translateY(2px); box-shadow: none; }
+
+        /* LOADING ANIMADO */
         #loading-screen {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #2c1a4d;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
             z-index: 10000;
         }
 
         .loader {
-            border: 5px solid #222;
-            border-top: 5px solid #fff;
+            width: 60px; height: 60px;
+            border: 8px solid #3b2566;
+            border-top: 8px solid #ff0055;
             border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            animation: spin 0.8s linear infinite;
         }
-
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* BOTÃO SAIR */
-        .btn-exit {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            z-index: 10001;
-            background: rgba(0, 0, 0, 0.6);
-            color: #fff;
-            border: 1px solid #fff;
-            padding: 10px 15px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-        .btn-exit:hover { background: #fff; color: #000; }
     </style>
 </head>
 <body>
 
-    <div class="portal">
-        <h1>2026 GAME HUB</h1>
-        
-        <div class="grid-jogos">
-            <button class="btn-play btn-city" onclick="abrirJogo('./city-chase.html')">
-                CITY CHASE
-            </button>
+    <header>🕹️ 2026 GAMES PORTAL</header>
 
-            <button class="btn-play btn-escape" onclick="abrirJogo('./escape-67.html')">
-                ESCAPE ROADS '67
-            </button>
+    <div class="container">
+        
+        <div class="game-card card-1" onclick="abrirJogo('./city-chase.html')">
+            <div class="game-icon">🚓</div>
+            <div class="game-title">City Chase</div>
         </div>
+
+        <div class="game-card card-2" onclick="abrirJogo('./escape-67.html')">
+            <div class="game-icon">🏎️</div>
+            <div class="game-title">Escape Roads</div>
+        </div>
+
+        <div class="game-card" style="background: #444; opacity: 0.5; cursor: default;">
+            <div class="game-icon">❓</div>
+            <div class="game-title">Em Breve</div>
+        </div>
+
     </div>
 
     <div id="game-overlay">
-        <button class="btn-exit" onclick="fecharJogo()">VOLTAR AO MENU [X]</button>
+        <button class="btn-exit" onclick="fecharJogo()">✕ SAIR</button>
         
         <div id="loading-screen">
             <div class="loader"></div>
-            <p id="loading-text">CARREGANDO SISTEMA...</p>
+            <p style="margin-top:20px; font-weight:bold;">CARREGANDO JOGO...</p>
         </div>
 
         <iframe id="game-frame" src=""></iframe>
@@ -176,17 +165,10 @@
             overlay.style.display = 'block';
             loader.style.display = 'flex';
             frame.src = url;
-
-            // TRAVA O SCROLL DO SITE
             document.body.style.overflow = 'hidden';
-            document.documentElement.style.overflow = 'hidden';
-
-            if (overlay.requestFullscreen) {
-                overlay.requestFullscreen().catch(() => {});
-            }
+            if (overlay.requestFullscreen) overlay.requestFullscreen().catch(() => {});
         }
 
-        // ESCONDE O LOADING QUANDO O JOGO CARREGA
         frame.onload = function() {
             if (frame.src !== "" && frame.src !== "about:blank") {
                 setTimeout(() => {
@@ -199,16 +181,9 @@
         function fecharJogo() {
             overlay.style.display = 'none';
             frame.src = ''; 
-
-            // LIBERA O SCROLL DO SITE
             document.body.style.overflow = 'auto';
-            document.documentElement.style.overflow = 'auto';
-
-            if (document.exitFullscreen) {
-                document.exitFullscreen().catch(() => {});
-            }
+            if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
         }
     </script>
-
 </body>
 </html>

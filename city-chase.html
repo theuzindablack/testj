@@ -1,27 +1,27 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>City Chase - Fumaça e IA Melhorada</title>
-    <style>
-        body { margin: 0; overflow: hidden; background: #222; font-family: sans-serif; touch-action: none; }
-        canvas { display: block; background: #3a633a; }
-        #ui { position: absolute; top: 10px; left: 10px; color: #fff; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 8px; pointer-events: none; border: 1px solid #444; z-index: 10; font-family: monospace; }
-        .controls { position: absolute; bottom: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; pointer-events: none; z-index: 10; }
-        .joy-group { display: flex; gap: 10px; pointer-events: auto; }
-        .btn { width: 65px; height: 65px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 2px solid rgba(255,255,255,0.4); user-select: none; font-weight: bold; }
-        #msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; background: rgba(200,0,0,0.9); padding: 20px; border-radius: 10px; font-size: 30px; display: none; z-index: 20; }
-    </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>City Chase - Fumaça e IA Melhorada</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #222; font-family: sans-serif; touch-action: none; }
+        canvas { display: block; background: #3a633a; }
+        #ui { position: absolute; top: 10px; left: 10px; color: #fff; background: rgba(0,0,0,0.8); padding: 10px; border-radius: 8px; pointer-events: none; border: 1px solid #444; z-index: 10; font-family: monospace; }
+        .controls { position: absolute; bottom: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; pointer-events: none; z-index: 10; }
+        .joy-group { display: flex; gap: 10px; pointer-events: auto; }
+        .btn { width: 65px; height: 65px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; border: 2px solid rgba(255,255,255,0.4); user-select: none; font-weight: bold; }
+        #msg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; background: rgba(200,0,0,0.9); padding: 20px; border-radius: 10px; font-size: 30px; display: none; z-index: 20; }
+    </style>
 </head>
 <body>
-    <div id="ui">KM/H: <span id="speedo">0</span> | COPS: <span id="cop-count">0</span></div>
-    <div id="msg">PRESO!</div>
-    <div class="controls">
-        <div class="joy-group"><div class="btn" id="btn-left">←</div><div class="btn" id="btn-right">→</div></div>
-        <div class="joy-group"><div class="btn" id="btn-up" style="color:#2ecc71">GAS</div><div class="btn" id="btn-down" style="color:#e74c3c">RÉ</div></div>
-    </div>
-    <canvas id="gameCanvas"></canvas>
+    <div id="ui">KM/H: <span id="speedo">0</span> | COPS: <span id="cop-count">0</span></div>
+    <div id="msg">PRESO!</div>
+    <div class="controls">
+        <div class="joy-group"><div class="btn" id="btn-left">←</div><div class="btn" id="btn-right">→</div></div>
+        <div class="joy-group"><div class="btn" id="btn-up" style="color:#2ecc71">GAS</div><div class="btn" id="btn-down" style="color:#e74c3c">RÉ</div></div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
 
 <script>
 const canvas = document.getElementById('gameCanvas');
@@ -41,174 +41,174 @@ let gameTime = 0; let gameOver = false;
 const player = { x: 125, y: 125, angle: 0, speed: 0, maxSpeed: 800, maxRev: -250, accel: 700, revAccel: 350, friction: 0.97 };
 
 for (let x = -6; x < 6; x++) {
-    for (let y = -6; y < 6; y++) {
-        if (x === 0 || y === 0) continue;
-        houses.push({
-            x: x * GRID + ROAD + 60, y: y * GRID + ROAD + 60,
-            w: 120, h: 100, alt: 80, color: `hsl(${Math.random()*30}, 50%, 40%)`
-        });
-    }
+    for (let y = -6; y < 6; y++) {
+        if (x === 0 || y === 0) continue;
+        houses.push({
+            x: x * GRID + ROAD + 60, y: y * GRID + ROAD + 60,
+            w: 120, h: 100, alt: 80, color: `hsl(${Math.random()*30}, 50%, 40%)`
+        });
+    }
 }
 
 const setInput = (k, v) => inputs[k] = v;
-window.onkeydown = e => { 
-    const k = e.key.toLowerCase();
-    if(['w','arrowup'].includes(k)) setInput('w', true);
-    if(['s','arrowdown'].includes(k)) setInput('s', true);
-    if(['a','arrowleft'].includes(k)) setInput('a', true);
-    if(['d','arrowright'].includes(k)) setInput('d', true);
+window.onkeydown = e => { 
+    const k = e.key.toLowerCase();
+    if(['w','arrowup'].includes(k)) setInput('w', true);
+    if(['s','arrowdown'].includes(k)) setInput('s', true);
+    if(['a','arrowleft'].includes(k)) setInput('a', true);
+    if(['d','arrowright'].includes(k)) setInput('d', true);
 };
 window.onkeyup = e => {
-    const k = e.key.toLowerCase();
-    if(['w','arrowup'].includes(k)) setInput('w', false);
-    if(['s','arrowdown'].includes(k)) setInput('s', false);
-    if(['a','arrowleft'].includes(k)) setInput('a', false);
-    if(['d','arrowright'].includes(k)) setInput('d', false);
+    const k = e.key.toLowerCase();
+    if(['w','arrowup'].includes(k)) setInput('w', false);
+    if(['s','arrowdown'].includes(k)) setInput('s', false);
+    if(['a','arrowleft'].includes(k)) setInput('a', false);
+    if(['d','arrowright'].includes(k)) setInput('d', false);
 };
 
 function setupBtn(id, key) {
-    const el = document.getElementById(id);
-    el.onmousedown = el.ontouchstart = (e) => { e.preventDefault(); setInput(key, true); };
-    el.onmouseup = el.ontouchend = (e) => { e.preventDefault(); setInput(key, false); };
+    const el = document.getElementById(id);
+    el.onmousedown = el.ontouchstart = (e) => { e.preventDefault(); setInput(key, true); };
+    el.onmouseup = el.ontouchend = (e) => { e.preventDefault(); setInput(key, false); };
 }
 setupBtn('btn-up','w'); setupBtn('btn-down','s'); setupBtn('btn-left','a'); setupBtn('btn-right','d');
 
 function project(x, y, z = 0) {
-    return { x: (x - player.x) + canvas.width/2, y: (y - player.y) * 0.7 - z + canvas.height/2 };
+    return { x: (x - player.x) + canvas.width/2, y: (y - player.y) * 0.7 - z + canvas.height/2 };
 }
 
 function isInsideHouse(nx, ny) {
-    for (let h of houses) {
-        if (nx+15 > h.x && nx-15 < h.x+h.w && ny+15 > h.y && ny-15 < h.y+h.h) return true;
-    }
-    return false;
+    for (let h of houses) {
+        if (nx+15 > h.x && nx-15 < h.x+h.w && ny+15 > h.y && ny-15 < h.y+h.h) return true;
+    }
+    return false;
 }
 
 function update(dt) {
-    if(gameOver) return;
-    gameTime += dt;
+    if(gameOver) return;
+    gameTime += dt;
 
-    if (inputs.w) player.speed += player.accel * dt;
-    else if (inputs.s) player.speed -= player.revAccel * dt;
-    else player.speed *= player.friction;
-    
-    player.speed = Math.max(player.maxRev, Math.min(player.speed, player.maxSpeed));
+    if (inputs.w) player.speed += player.accel * dt;
+    else if (inputs.s) player.speed -= player.revAccel * dt;
+    else player.speed *= player.friction;
+    
+    player.speed = Math.max(player.maxRev, Math.min(player.speed, player.maxSpeed));
 
-    if (Math.abs(player.speed) > 10) {
-        let turn = 5 * dt * (player.speed > 0 ? 1 : -1);
-        if (inputs.a) player.angle -= turn;
-        if (inputs.d) player.angle += turn;
-    }
+    if (Math.abs(player.speed) > 10) {
+        let turn = 5 * dt * (player.speed > 0 ? 1 : -1);
+        if (inputs.a) player.angle -= turn;
+        if (inputs.d) player.angle += turn;
+    }
 
-    // Fumaça do Jogador
-    if (Math.abs(player.speed) > 50 && Math.random() > 0.4) {
-        particles.push({ x: player.x - Math.cos(player.angle)*20, y: player.y - Math.sin(player.angle)*20, life: 1, size: 5 });
-    }
+    // Fumaça do Jogador
+    if (Math.abs(player.speed) > 50 && Math.random() > 0.4) {
+        particles.push({ x: player.x - Math.cos(player.angle)*20, y: player.y - Math.sin(player.angle)*20, life: 1, size: 5 });
+    }
 
-    let npx = player.x + Math.cos(player.angle) * player.speed * dt;
-    let npy = player.y + Math.sin(player.angle) * player.speed * dt;
+    let npx = player.x + Math.cos(player.angle) * player.speed * dt;
+    let npy = player.y + Math.sin(player.angle) * player.speed * dt;
 
-    if (!isInsideHouse(npx, npy) || isInsideHouse(player.x, player.y)) {
-        player.x = npx; player.y = npy;
-    } else { player.speed *= -0.3; }
+    if (!isInsideHouse(npx, npy) || isInsideHouse(player.x, player.y)) {
+        player.x = npx; player.y = npy;
+    } else { player.speed *= -0.3; }
 
-    // Spawn e IA da Polícia
-    if (Math.floor(gameTime / 10) > cops.length && cops.length < 5) {
-        cops.push({ x: player.x + 600, y: player.y + 600, angle: 0, speed: 0 });
-    }
+    // Spawn e IA da Polícia
+    if (Math.floor(gameTime / 10) > cops.length && cops.length < 5) {
+        cops.push({ x: player.x + 600, y: player.y + 600, angle: 0, speed: 0 });
+    }
 
-    cops.forEach((c, idx) => {
-        let dx = player.x - c.x;
-        let dy = player.y - c.y;
-        let angleToPlayer = Math.atan2(dy, dx);
-        
-        // Separação (Faz elas não andarem no mesmo lugar)
-        cops.forEach((other, oIdx) => {
-            if(idx === oIdx) return;
-            let dist = Math.hypot(c.x - other.x, c.y - other.y);
-            if(dist < 60) {
-                angleToPlayer += (idx > oIdx ? 0.4 : -0.4); // Desvia levemente para o lado
-            }
-        });
+    cops.forEach((c, idx) => {
+        let dx = player.x - c.x;
+        let dy = player.y - c.y;
+        let angleToPlayer = Math.atan2(dy, dx);
+        
+        // Separação (Faz elas não andarem no mesmo lugar)
+        cops.forEach((other, oIdx) => {
+            if(idx === oIdx) return;
+            let dist = Math.hypot(c.x - other.x, c.y - other.y);
+            if(dist < 60) {
+                angleToPlayer += (idx > oIdx ? 0.4 : -0.4); // Desvia levemente para o lado
+            }
+        });
 
-        let diff = angleToPlayer - c.angle;
-        while (diff < -Math.PI) diff += Math.PI * 2;
-        while (diff > Math.PI) diff -= Math.PI * 2;
-        c.angle += diff * 1.5 * dt;
-        c.speed = Math.min(c.speed + 300 * dt, 440 + (gameTime));
-        
-        let cnx = c.x + Math.cos(c.angle) * c.speed * dt;
-        let cny = c.y + Math.sin(c.angle) * c.speed * dt;
+        let diff = angleToPlayer - c.angle;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        c.angle += diff * 1.5 * dt;
+        c.speed = Math.min(c.speed + 300 * dt, 440 + (gameTime));
+        
+        let cnx = c.x + Math.cos(c.angle) * c.speed * dt;
+        let cny = c.y + Math.sin(c.angle) * c.speed * dt;
 
-        if (!isInsideHouse(cnx, cny) || isInsideHouse(c.x, c.y)) {
-            c.x = cnx; c.y = cny;
-        } else { c.angle += 0.5; c.speed *= 0.8; }
+        if (!isInsideHouse(cnx, cny) || isInsideHouse(c.x, c.y)) {
+            c.x = cnx; c.y = cny;
+        } else { c.angle += 0.5; c.speed *= 0.8; }
 
-        if (Math.hypot(player.x - c.x, player.y - c.y) < 40) {
-            gameOver = true; msg.style.display = "block";
-            setTimeout(() => location.reload(), 3000);
-        }
-    });
+        if (Math.hypot(player.x - c.x, player.y - c.y) < 40) {
+            gameOver = true; msg.style.display = "block";
+            setTimeout(() => location.reload(), 3000);
+        }
+    });
 
-    // Update Partículas
-    for(let i=particles.length-1; i>=0; i--) {
-        particles[i].life -= dt * 1.5;
-        particles[i].size += dt * 20;
-        if(particles[i].life <= 0) particles.splice(i, 1);
-    }
+    // Update Partículas
+    for(let i=particles.length-1; i>=0; i--) {
+        particles[i].life -= dt * 1.5;
+        particles[i].size += dt * 20;
+        if(particles[i].life <= 0) particles.splice(i, 1);
+    }
 
-    speedo.innerText = Math.floor(Math.abs(player.speed) / 5);
-    document.getElementById('cop-count').innerText = cops.length;
+    speedo.innerText = Math.floor(Math.abs(player.speed) / 5);
+    document.getElementById('cop-count').innerText = cops.length;
 }
 
 function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
-    // Ruas
-    ctx.fillStyle = "#252525";
-    for(let i = -6; i < 6; i++) {
-        let r = project(i*GRID, player.y-1000);
-        ctx.fillRect(r.x, 0, ROAD, canvas.height);
-        let rh = project(player.x-1000, i*GRID);
-        ctx.fillRect(0, rh.y, canvas.width, ROAD*0.7);
-    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Ruas
+    ctx.fillStyle = "#252525";
+    for(let i = -6; i < 6; i++) {
+        let r = project(i*GRID, player.y-1000);
+        ctx.fillRect(r.x, 0, ROAD, canvas.height);
+        let rh = project(player.x-1000, i*GRID);
+        ctx.fillRect(0, rh.y, canvas.width, ROAD*0.7);
+    }
 
-    // Desenhar Fumaça
-    particles.forEach(p => {
-        let pos = project(p.x, p.y);
-        ctx.fillStyle = `rgba(200,200,200,${p.life * 0.4})`;
-        ctx.beginPath(); ctx.arc(pos.x, pos.y, p.size, 0, Math.PI*2); ctx.fill();
-    });
+    // Desenhar Fumaça
+    particles.forEach(p => {
+        let pos = project(p.x, p.y);
+        ctx.fillStyle = `rgba(200,200,200,${p.life * 0.4})`;
+        ctx.beginPath(); ctx.arc(pos.x, pos.y, p.size, 0, Math.PI*2); ctx.fill();
+    });
 
-    houses.sort((a,b) => a.y - b.y).forEach(h => {
-        if (Math.abs(h.x - player.x) > 1300 || Math.abs(h.y - player.y) > 1300) return;
-        let b = [project(h.x, h.y), project(h.x+h.w, h.y), project(h.x+h.w, h.y+h.h), project(h.x, h.y+h.h)];
-        let t = [project(h.x, h.y, h.alt), project(h.x+h.w, h.y, h.alt), project(h.x+h.w, h.y+h.h, h.alt), project(h.x, h.y+h.h, h.alt)];
-        let p = project(h.x + h.w/2, h.y + h.h/2, h.alt + 40);
-        ctx.fillStyle = "#eee"; ctx.beginPath(); ctx.moveTo(b[3].x, b[3].y); ctx.lineTo(t[3].x, t[3].y); ctx.lineTo(t[2].x, t[2].y); ctx.lineTo(b[2].x, b[2].y); ctx.fill();
-        for(let i=0; i<4; i++) {
-            ctx.fillStyle = i % 2 === 0 ? h.color : "#422";
-            let next = (i+1)%4;
-            ctx.beginPath(); ctx.moveTo(t[i].x, t[i].y); ctx.lineTo(t[next].x, t[next].y); ctx.lineTo(p.x, p.y); ctx.fill();
-        }
-    });
+    houses.sort((a,b) => a.y - b.y).forEach(h => {
+        if (Math.abs(h.x - player.x) > 1300 || Math.abs(h.y - player.y) > 1300) return;
+        let b = [project(h.x, h.y), project(h.x+h.w, h.y), project(h.x+h.w, h.y+h.h), project(h.x, h.y+h.h)];
+        let t = [project(h.x, h.y, h.alt), project(h.x+h.w, h.y, h.alt), project(h.x+h.w, h.y+h.h, h.alt), project(h.x, h.y+h.h, h.alt)];
+        let p = project(h.x + h.w/2, h.y + h.h/2, h.alt + 40);
+        ctx.fillStyle = "#eee"; ctx.beginPath(); ctx.moveTo(b[3].x, b[3].y); ctx.lineTo(t[3].x, t[3].y); ctx.lineTo(t[2].x, t[2].y); ctx.lineTo(b[2].x, b[2].y); ctx.fill();
+        for(let i=0; i<4; i++) {
+            ctx.fillStyle = i % 2 === 0 ? h.color : "#422";
+            let next = (i+1)%4;
+            ctx.beginPath(); ctx.moveTo(t[i].x, t[i].y); ctx.lineTo(t[next].x, t[next].y); ctx.lineTo(p.x, p.y); ctx.fill();
+        }
+    });
 
-    cops.forEach(c => {
-        ctx.save();
-        let cp = project(c.x, c.y);
-        ctx.translate(cp.x, cp.y); ctx.rotate(c.angle);
-        ctx.fillStyle = "#111"; ctx.fillRect(-22, -12, 44, 24);
-        ctx.fillStyle = "#fff"; ctx.fillRect(-6, -12, 16, 24);
-        ctx.fillStyle = (Math.floor(gameTime*8)%2===0)?"red":"blue"; ctx.fillRect(-2, -5, 4, 10);
-        ctx.restore();
-    });
+    cops.forEach(c => {
+        ctx.save();
+        let cp = project(c.x, c.y);
+        ctx.translate(cp.x, cp.y); ctx.rotate(c.angle);
+        ctx.fillStyle = "#111"; ctx.fillRect(-22, -12, 44, 24);
+        ctx.fillStyle = "#fff"; ctx.fillRect(-6, -12, 16, 24);
+        ctx.fillStyle = (Math.floor(gameTime*8)%2===0)?"red":"blue"; ctx.fillRect(-2, -5, 4, 10);
+        ctx.restore();
+    });
 
-    ctx.save();
-    let pp = project(player.x, player.y);
-    ctx.translate(pp.x, pp.y); ctx.rotate(player.angle);
-    ctx.fillStyle = "#3498db"; ctx.fillRect(-20, -12, 40, 24);
-    ctx.fillStyle = "#222"; ctx.fillRect(4, -10, 12, 20);
-    ctx.restore();
+    ctx.save();
+    let pp = project(player.x, player.y);
+    ctx.translate(pp.x, pp.y); ctx.rotate(player.angle);
+    ctx.fillStyle = "#3498db"; ctx.fillRect(-20, -12, 40, 24);
+    ctx.fillStyle = "#222"; ctx.fillRect(4, -10, 12, 20);
+    ctx.restore();
 }
 
 function loop() { update(1/60); draw(); requestAnimationFrame(loop); }

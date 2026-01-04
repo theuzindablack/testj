@@ -1,21 +1,24 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 GAMES - HUB OFICIAL</title>
+    <title>2026 GAMES - OFICIAL</title>
     <style>
-        /* CSS PARA LIMPAR A TELA E DEIXAR TUDO PRETO */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body { 
-            background: #050505; 
-            color: #00ff41; 
-            font-family: 'Courier New', Courier, monospace; 
-            overflow: hidden; /* Evita rolagem no menu principal */
-            height: 100vh;
-            width: 100vw;
+        /* RESET TOTAL PARA ELIMINAR BARRAS DE ROLAGEM */
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: #050505;
+            color: #00ff41;
+            font-family: 'Courier New', Courier, monospace;
+            overflow-x: hidden; /* Evita barra lateral no menu */
         }
 
         /* MENU PRINCIPAL */
@@ -24,12 +27,22 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100%;
+            min-height: 100vh;
+            padding: 20px;
         }
 
-        h1 { margin-bottom: 30px; letter-spacing: 5px; text-shadow: 0 0 10px #00ff41; }
+        h1 { 
+            margin-bottom: 40px; 
+            text-shadow: 0 0 15px #00ff41; 
+            text-align: center;
+        }
 
-        .grid-jogos { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .grid-jogos { 
+            display: flex; 
+            gap: 20px; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+        }
 
         .btn-play {
             padding: 20px 40px;
@@ -40,37 +53,33 @@
             font-weight: bold;
             text-transform: uppercase;
             cursor: pointer;
+            border-radius: 8px;
             transition: 0.3s;
-            border-radius: 5px;
         }
 
         .btn-play:hover {
             background: #00ff41;
             color: #000;
-            box-shadow: 0 0 20px #00ff41;
+            box-shadow: 0 0 25px #00ff41;
         }
 
-        /* OVERLAY DO JOGO (TELA CHEIA TOTAL) */
+        /* OVERLAY DO JOGO (COBRE TUDO) */
         #game-overlay {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 100%;
             background: #000;
-            z-index: 1000;
-            display: none; /* Começa escondido */
+            z-index: 9999;
+            display: none;
         }
 
-        /* IFRAME AJUSTADO PARA NÃO CORTAR NADA */
         iframe {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
             border: none;
-            outline: none;
+            display: block;
         }
 
         /* TELA DE LOADING */
@@ -85,17 +94,17 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 1100;
+            z-index: 10000;
         }
 
         .loader {
-            border: 4px solid #111;
-            border-top: 4px solid #00ff41;
+            border: 5px solid #111;
+            border-top: 5px solid #00ff41;
             border-radius: 50%;
             width: 60px;
             height: 60px;
             animation: spin 1s linear infinite;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -103,28 +112,27 @@
         /* BOTÃO SAIR */
         .btn-exit {
             position: absolute;
-            top: 15px;
-            right: 15px;
-            z-index: 1200;
-            background: rgba(255, 0, 0, 0.7);
+            top: 20px;
+            right: 20px;
+            z-index: 10001;
+            background: rgba(255, 0, 0, 0.8);
             color: white;
             border: none;
-            padding: 10px 15px;
+            padding: 12px 20px;
             border-radius: 5px;
             cursor: pointer;
             font-weight: bold;
+            font-size: 14px;
         }
-
-        .btn-exit:hover { background: red; }
     </style>
 </head>
 <body>
 
     <div class="portal">
-        <h1>[ SYSTEM 2026 ]</h1>
+        <h1>[ SYSTEM 2026 ONLINE ]</h1>
         <div class="grid-jogos">
-            <button class="btn-play" onclick="abrirJogo('./city-chase.html')">JOGAR CITY CHASE</button>
-            </div>
+            <button class="btn-play" onclick="abrirJogo('./city-chase.html')">CITY CHASE</button>
+        </div>
     </div>
 
     <div id="game-overlay">
@@ -132,7 +140,7 @@
         
         <div id="loading-screen">
             <div class="loader"></div>
-            <p>CARREGANDO SISTEMA...</p>
+            <p>CONECTANDO AO JOGO...</p>
         </div>
 
         <iframe id="game-frame" src=""></iframe>
@@ -144,34 +152,40 @@
         const loader = document.getElementById('loading-screen');
 
         function abrirJogo(url) {
-            // 1. Mostrar a tela preta e o loading
             overlay.style.display = 'block';
             loader.style.display = 'flex';
-            
-            // 2. Colocar o link do jogo no iframe
             frame.src = url;
 
-            // 3. Tentar forçar tela cheia do navegador (opcional)
+            // TRAVA A ROLAGEM DO SITE (SOMA A BARRA)
+            document.body.style.overflow = 'hidden';
+            document.documentElement.style.overflow = 'hidden';
+
+            // TENTA FULLSCREEN AUTOMÁTICO
             if (overlay.requestFullscreen) {
-                overlay.requestFullscreen().catch(err => console.log("Erro ao entrar em tela cheia"));
+                overlay.requestFullscreen().catch(() => {});
             }
         }
 
-        // Esta função roda quando o jogo dentro do iframe termina de carregar
+        // QUANDO O JOGO TERMINAR DE CARREGAR
         frame.onload = function() {
-            setTimeout(() => {
-                loader.style.display = 'none';
-                // Garante que o foco vá para o jogo para os controles funcionarem
-                frame.contentWindow.focus();
-            }, 500); 
+            if (frame.src !== "" && frame.src !== "about:blank") {
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    frame.contentWindow.focus();
+                }, 800);
+            }
         };
 
         function fecharJogo() {
             overlay.style.display = 'none';
-            frame.src = ''; // Limpa o jogo da memória
-            
+            frame.src = ''; 
+
+            // LIBERA A ROLAGEM DO SITE NOVAMENTE
+            document.body.style.overflow = 'auto';
+            document.documentElement.style.overflow = 'auto';
+
             if (document.exitFullscreen) {
-                document.exitFullscreen().catch(err => {});
+                document.exitFullscreen().catch(() => {});
             }
         }
     </script>

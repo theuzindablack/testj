@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>2026 GAMES - OFICIAL</title>
+    <style>
+        body { background: #000; color: #0f0; font-family: 'Courier New', monospace; text-align: center; }
+        .cabecalho { padding: 20px; border-bottom: 2px solid #0f0; margin-bottom: 20px; }
+        .grid-jogos { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 30px; }
+        
+        .btn-jogo { 
+            padding: 15px 25px; background: #222; color: #0f0; border: 2px solid #0f0;
+            cursor: pointer; font-weight: bold; font-size: 16px;
+        }
+        .btn-jogo:hover { background: #0f0; color: #000; box-shadow: 0 0 20px #0f0; }
+
+        /* A Telinha onde o jogo aparece */
+        #area-do-jogo {
+            width: 90%; max-width: 800px; height: 500px; margin: 0 auto;
+            border: 4px solid #333; border-radius: 10px; display: none; background: #fff;
+        }
+        iframe { width: 100%; height: 100%; border: none; }
+    </style>
+</head>
+<body>
+
+    <div class="cabecalho">
+        <h1>🎮 2026 GAMES PORTAL</h1>
+        <p>Selecione um jogo para carregar na tela abaixo:</p>
+    </div>
+
+    <div class="grid-jogos">
+        <button class="btn-jogo" onclick="carregar('./jogo1.html')">CLICKER GAME</button>
+        <button class="btn-jogo" onclick="carregar('./jogo2.html')">FÍSICA BOLINHA</button>
+    </div>
+
+    <div id="area-do-jogo">
+        <iframe id="tela" src=""></iframe>
+    </div>
+
+    <script>
+        function carregar(arquivo) {
+            document.getElementById('tela').src = arquivo;
+            document.getElementById('area-do-jogo').style.display = 'block';
+        }
+    </script>
+
+</body>
+</html>

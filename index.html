@@ -3,19 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 GAMES | Portal de Jogos</title>
+    <title>2026 GAMES | Portal</title>
     <style>
-        /* ESTILO INSPIRADO NO POKI */
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            background: #2c1a4d; /* Roxo clássico do Poki */
+            background: #2c1a4d;
             color: #fff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
             overflow-x: hidden;
         }
 
-        /* BARRA SUPERIOR */
         header {
             background: #3b2566;
             padding: 20px;
@@ -23,21 +21,19 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.4);
             font-weight: 900;
             font-size: 28px;
-            letter-spacing: 2px;
             border-bottom: 4px solid #271644;
         }
 
-        /* CONTENTOR DOS JOGOS */
         .container {
             padding: 30px 20px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            /* Ajusta automaticamente a quantidade de colunas */
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 20px;
-            max-width: 1000px;
+            max-width: 900px;
             margin: 0 auto;
         }
 
-        /* CARD DO JOGO (TILES) */
         .game-card {
             aspect-ratio: 1 / 1;
             border-radius: 20px;
@@ -47,38 +43,26 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s ease-in-out;
-            position: relative;
-            overflow: hidden;
             border-bottom: 8px solid rgba(0,0,0,0.2);
             text-decoration: none;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
-        /* EFEITO AO PASSAR O RATO (IGUAL AO POKI) */
         .game-card:hover {
             transform: translateY(-10px) scale(1.05);
             box-shadow: 0 15px 30px rgba(0,0,0,0.5);
         }
 
-        .game-icon {
-            font-size: 70px;
-            margin-bottom: 10px;
-            filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.2));
-        }
+        .game-icon { font-size: 60px; margin-bottom: 10px; }
+        .game-title { font-weight: bold; font-size: 14px; text-transform: uppercase; text-align: center; }
 
-        .game-title {
-            font-weight: bold;
-            font-size: 16px;
-            text-transform: uppercase;
-            text-align: center;
-        }
+        /* CORES DOS CARDS */
+        .card-city   { background: #00ff88; color: #053a24; } 
+        .card-escape { background: #ff0055; color: #ffffff; } 
+        .card-neon   { background: #00f2ff; color: #003a3d; } 
+        .card-queimada { background: #ffcc00; color: #332200; } /* Amarelo Queimada */
 
-        /* CORES PERSONALIZADAS PARA CADA JOGO */
-        .card-city { background: #00ff88; color: #053a24; }   /* Verde */
-        .card-escape { background: #ff0055; color: #ffffff; } /* Rosa */
-        .card-neon { background: #00f2ff; color: #003a3d; }   /* Azul Neon */
-
-        /* SISTEMA DE OVERLAY (TELA DO JOGO) */
+        /* SISTEMA DE OVERLAY */
         #game-overlay {
             position: fixed;
             top: 0; left: 0;
@@ -90,20 +74,16 @@
 
         iframe { width: 100%; height: 100%; border: none; }
 
-        /* BOTÃO SAIR ESTILO POKI */
         .btn-exit {
             position: absolute;
-            top: 20px; right: 20px;
+            top: 15px; right: 15px;
             background: #fff; color: #000;
-            border: none; padding: 15px 25px;
+            border: none; padding: 12px 20px;
             border-radius: 40px; cursor: pointer;
             font-weight: 800; z-index: 10001;
-            box-shadow: 0 5px 0 #bbb;
-            font-size: 14px;
+            box-shadow: 0 4px 0 #bbb;
         }
-        .btn-exit:active { transform: translateY(3px); box-shadow: 0 2px 0 #bbb; }
 
-        /* TELA DE LOADING */
         #loading-screen {
             position: absolute;
             top: 0; left: 0;
@@ -115,20 +95,13 @@
         }
 
         .loader {
-            width: 70px; height: 70px;
-            border: 10px solid #3b2566;
-            border-top: 10px solid #ff0055;
+            width: 50px; height: 50px;
+            border: 8px solid #3b2566;
+            border-top: 8px solid #ffcc00;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* RESPONSIVIDADE PARA TELEMÓVEL */
-        @media (max-width: 480px) {
-            .container { grid-template-columns: repeat(2, 1fr); gap: 15px; }
-            .game-icon { font-size: 50px; }
-            .game-title { font-size: 12px; }
-        }
     </style>
 </head>
 <body>
@@ -152,16 +125,19 @@
             <div class="game-title">Neon Stack</div>
         </div>
 
+        <div class="game-card card-queimada" onclick="abrirJogo('./queimada.html')">
+            <div class="game-icon">🏐</div>
+            <div class="game-title">Queimada 3D</div>
+        </div>
+
     </div>
 
     <div id="game-overlay">
-        <button class="btn-exit" onclick="fecharJogo()">✕ SAIR DO JOGO</button>
-        
+        <button class="btn-exit" onclick="fecharJogo()">✕ SAIR</button>
         <div id="loading-screen">
             <div class="loader"></div>
-            <p style="margin-top:25px; font-weight:bold; letter-spacing: 1px;">A PREPARAR O JOGO...</p>
+            <p style="margin-top:20px; font-weight:bold;">CARREGANDO SISTEMA...</p>
         </div>
-
         <iframe id="game-frame" src=""></iframe>
     </div>
 
@@ -174,23 +150,16 @@
             overlay.style.display = 'block';
             loader.style.display = 'flex';
             frame.src = url;
-            
-            // Impede o scroll da página de trás
             document.body.style.overflow = 'hidden';
-
-            // Tenta abrir em ecrã total
-            if (overlay.requestFullscreen) {
-                overlay.requestFullscreen().catch(() => {});
-            }
+            if (overlay.requestFullscreen) overlay.requestFullscreen().catch(() => {});
         }
 
-        // Esconde o loading quando o jogo terminar de carregar
         frame.onload = function() {
             if (frame.src !== "" && frame.src !== "about:blank") {
                 setTimeout(() => {
                     loader.style.display = 'none';
-                    frame.contentWindow.focus(); // Dá foco ao jogo para os controlos funcionarem
-                }, 1200);
+                    frame.contentWindow.focus();
+                }, 1000);
             }
         };
 
@@ -198,10 +167,7 @@
             overlay.style.display = 'none';
             frame.src = ''; 
             document.body.style.overflow = 'auto';
-
-            if (document.exitFullscreen) {
-                document.exitFullscreen().catch(() => {});
-            }
+            if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
         }
     </script>
 </body>

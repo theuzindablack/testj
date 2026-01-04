@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>NEON STACK 3D - PC EDITION</title>
+    <style>
+        :root { --main: #00f2ff; --bg: #050508; }
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: var(--bg); 
+            font-family: 'Segoe UI', sans-serif; 
+            user-select: none; 
+        }
+
+        /* UI DO JOGO */
+        #ui { 
+            position: absolute; 
+            top: 50px; 
+            width: 100%; 
+            text-align: center; 
+            color: #ffffff; 
+            pointer-events: none; 
+            z-index: 10; 
+        }
+        #score { 
+            font-size: 100px; 
+            font-weight: 900; 
+            margin: 0; 
+            text-shadow: 0 0 30px var(--main); 
+        }
+        .label { 
+            font-size: 18px; 
+            letter-spacing: 8px; 
+            text-transform: uppercase; 
+            opacity: 0.5; 
+        }
+        
+        #instructions { 
+            position: absolute; 
+            bottom: 40px; 
+            width: 100%; 
+            text-align: center; 
+            color: white; 
+            font-size: 14px; 
+            letter-spacing: 3px; 
+            opacity: 0.4; 
+            text-transform: uppercase;
+        }
+
+        /* TELA DE GAME OVER */
+        #game-over {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        button {
+            background: var(--main);
+            border: none;
+            padding: 15px 30px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 20px;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="ui">
+        <div class="label">ALTITUDE</div>
+        <h1 id="score">0</h1>
+    </div>
+
+    <div id="game-over">
+        <h1 style="color: #ff0055; font-size: 50px;">FALHA NA ESTRUTURA</h1>
+        <p id="final-score"></p>
+        <button onclick="location.reload()">REINICIAR NÚCLEO</button>
+    </div>
+
+    <div id="instructions">Pressione ESPAÇO ou CLIQUE para empilhar</div>
+
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+
+        // Configuração Inicial
+        const scene = new THREE.Scene();
+        const aspect = window.innerWidth / window.innerHeight;
+        const d = 20;
+        const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, -100, 1000);
+        camera.position.set(20, 20, 20);
+        camera.lookAt(0, 0, 0);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        // Iluminação
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1);
+        mainLight.position.set(10, 20, 15);
+        scene.add(mainLight);
+
+        // Variáveis do Jogo
+        let stack = [];
+        let gameActive = true;
+        let speed = 0.25;
+        let direction = 'x';
+        let moveDir = 1;
+
+        function createBox(x, y, z, w, d, color) {
+            const geometry = new THREE.BoxGeometry(w, 1, d);
+            const material = new THREE.MeshPhongMaterial({ 
+                color, 
+                emissive: color, 
+                emissiveIntensity: 0.3 
+            });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(x, y, z);
+            scene.add(mesh);
+            return { mesh, w, d };
+        }
+
+        // Bloco Base
+        const base = createBox(0, 0, 0, 12, 12, 0x00f3ff);
+        stack.push(base);
+
+        function spawn() {
+            const prev = stack[stack.length - 1];
+            const hue = (stack.length * 20) % 360;
+            const color = new THREE.Color(`hsl(${hue}, 80%, 55%)`);
+            
+            direction = direction === 'x' ? 'z' : 'x';
+            const x = direction === 'x' ? -25 : prev.mesh.position.x;
+            const z = direction === 'z' ? -25 : prev.mesh.position.z;
+            
+            stack.push(createBox(x, stack.length, z, prev.w, prev.d, color));
+        }
+
+        spawn();
+
+        function handleStacking() {
+            if (!gameActive) return;
+
+            const current = stack[stack.length - 1];
+            const prev = stack[stack.length - 2];
+
+            const delta = direction === 'x' ? 
+                current.mesh.position.x - prev.mesh.position.x : 
+                current.mesh.position.z - prev.mesh.position.z;
+
+            const size = direction === 'x' ? current.w : current.d;
+            const overlap = size - Math.abs(delta);
+
+            if (overlap <= 0) {
+                gameOver();
+            } else {
+                // Ajusta o tamanho do bloco para o novo overlap
+                if (direction === 'x') {
+                    current.mesh.scale.x = overlap / current.w;
+                    current.mesh.position.x -= delta / 2;
+                    current.w = overlap;
+                } else {
+                    current.mesh.scale.z = overlap / current.d;
+                    current.mesh.position.z -= delta / 2;
+                    current.d = overlap;
+                }
+
+                document.getElementById('score').innerText = stack.length - 1;
+                speed += 0.005; // Aumenta dificuldade gradualmente
+                spawn();
+            }
+        }
+
+        function gameOver() {
+            gameActive = false;
+            document.getElementById('game-over').style.display = 'flex';
+            document.getElementById('final-score').innerText = "VOCÊ ATINGIU " + (stack.length - 1) + " BLOCOS";
+        }
+
+        // Entrada do Usuário (PC)
+        window.addEventListener('mousedown', handleStacking);
+        window.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') handleStacking();
+        });
+
+        // Loop de Animação
+        function animate() {
+            if (gameActive) {
+                const current = stack[stack.length - 1];
+                
+                if (direction === 'x') {
+                    current.mesh.position.x += speed * moveDir;
+                    if (Math.abs(current.mesh.position.x) > 25) moveDir *= -1;
+                } else {
+                    current.mesh.position.z += speed * moveDir;
+                    if (Math.abs(current.mesh.position.z) > 25) moveDir *= -1;
+                }
+
+                // Câmera segue a altura suavemente
+                camera.position.y = THREE.MathUtils.lerp(camera.position.y, stack.length + 15, 0.1);
+                camera.lookAt(0, stack.length - 5, 0);
+            }
+            
+            renderer.render(scene, camera);
+            requestAnimationFrame(animate);
+        }
+
+        // Responsividade
+        window.addEventListener('resize', () => {
+            const aspect = window.innerWidth / window.innerHeight;
+            camera.left = -d * aspect;
+            camera.right = d * aspect;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>

@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fortune Tiger - Oficial Style</title>
+    <style>
+        html, body {
+            height: 100vh; margin: 0; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            background: url("https://s2-techtudo.glbimg.com/NV-5RTOngXtFn3XudPJHkNv_W7E=/0x0:808x526/984x0/smart/filters:strip_icc()/i.s3.glbimg.com/v1/AUTH_08fbf48bc0524877943fe86e43087e7a/internal_photos/bs/2023/B/W/QdZUZSSfGwB93jjcFFfA/fortune-tiger.png") no-repeat center center;
+            background-size: cover; font-family: 'Arial Black', sans-serif;
+        }
+
+        body::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5); z-index: -1;
+        }
+
+        .container {
+            padding: 20px; background: rgba(60, 0, 0, 0.95);
+            border-radius: 30px; border: 4px solid #ffd700;
+            text-align: center; width: 340px; position: relative;
+            box-shadow: 0 0 50px #000;
+        }
+
+        /* Topo: Saldo */
+        .header-info {
+            display: flex; justify-content: space-between; align-items: center;
+            background: #000; padding: 10px 15px; border-radius: 15px;
+            border: 2px solid #d4af37; margin-bottom: 10px;
+        }
+        .balance-label { color: #aaa; font-size: 10px; text-transform: uppercase; }
+        .balance-value { color: #0f0; font-size: 18px; }
+
+        .slot-machine {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: 8px; margin-bottom: 15px; background: #200;
+            padding: 10px; border-radius: 15px; border: 2px solid #500;
+        }
+
+        .reel {
+            background: #400; border: 2px solid #d4af37;
+            border-radius: 8px; aspect-ratio: 1/1;
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; position: relative;
+        }
+        .reel img { width: 80%; height: 80%; object-fit: contain; }
+
+        /* Controles de Aposta */
+        .bet-controls {
+            display: flex; justify-content: center; align-items: center;
+            gap: 15px; margin-bottom: 15px; background: rgba(0,0,0,0.5);
+            padding: 10px; border-radius: 50px;
+        }
+        .btn-adj {
+            background: #d4af37; border: none; width: 30px; height: 30px;
+            border-radius: 50%; cursor: pointer; font-size: 20px; font-weight: bold;
+        }
+        .bet-display { color: #fff; font-size: 16px; min-width: 100px; }
+
+        /* Botão Girar */
+        .spin-button {
+            background: linear-gradient(to bottom, #ffd700, #ff8c00);
+            color: #400; border: none; padding: 18px;
+            font-size: 24px; font-weight: 900; border-radius: 50px;
+            cursor: pointer; width: 100%; box-shadow: 0 5px 0 #8b4513;
+            transition: 0.1s;
+        }
+        .spin-button:active { transform: translateY(3px); box-shadow: 0 2px 0 #8b4513; }
+        .spin-button:disabled { filter: grayscale(1); opacity: 0.6; }
+
+        /* Animações e Overlay */
+        .spinning { animation: slotBlur 0.1s infinite linear; }
+        @keyframes slotBlur {
+            0% { transform: translateY(-20px); filter: blur(4px); }
+            100% { transform: translateY(20px); filter: blur(4px); }
+        }
+
+        .winner { animation: winGlow 0.5s infinite alternate; border-color: #fff !important; z-index: 5; }
+        @keyframes winGlow { 
+            from { box-shadow: 0 0 10px gold; } 
+            to { box-shadow: 0 0 25px gold; transform: scale(1.05); } 
+        }
+
+        #win-overlay {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0);
+            background: radial-gradient(circle, #ffcc00, #ff8c00);
+            color: #400; padding: 25px; border-radius: 20px; border: 5px solid #fff;
+            width: 80%; z-index: 100; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 100px gold; pointer-events: none;
+        }
+        #win-overlay.show { transform: translate(-50%, -50%) scale(1.1); }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-info">
+        <div style="text-align: left;">
+            <div class="balance-label">Saldo</div>
+            <div class="balance-value">R$ <span id="balance">100.00</span></div>
+        </div>
+        <div style="color: gold; font-style: italic;">FORTUNE TIGER</div>
+    </div>
+    
+    <div class="slot-machine" id="grid"></div>
+    
+    <div class="bet-controls">
+        <button class="btn-adj" onclick="changeBet(-1)">-</button>
+        <div class="bet-display">Aposta: <b>R$ <span id="bet-value">1.00</span></b></div>
+        <button class="btn-adj" onclick="changeBet(1)">+</button>
+    </div>
+
+    <button class="spin-button" id="btn-spin">JOGAR</button>
+
+    <div id="win-overlay">
+        <div style="font-size: 14px; font-weight: bold;">GANHO TOTAL</div>
+        <div id="win-amount" style="font-size: 38px; text-shadow: 2px 2px #fff;">R$ 0.00</div>
+    </div>
+</div>
+
+<script>
+    const gridElement = document.getElementById('grid');
+    const btnSpin = document.getElementById('btn-spin');
+    const balanceEl = document.getElementById('balance');
+    const betEl = document.getElementById('bet-value');
+    const winOverlay = document.getElementById('win-overlay');
+    const winAmountEl = document.getElementById('win-amount');
+    
+    let balance = 100.00;
+    let currentBet = 1.00;
+
+    const symbols = [
+        "https://i.pinimg.com/736x/29/7c/ba/297cba3476d84c005c545cfe1b7053cb.jpg",
+        "https://i.pinimg.com/736x/11/98/ac/1198ac8a52077e06ac0eccdfcc33cb4d.jpg",
+        "https://i.pinimg.com/736x/69/51/54/695154ccc11ef18742dedc33111ab9f2.jpg",
+        "https://i.pinimg.com/736x/22/f0/9f/22f09f28d74247ecfd438c55804274ff.jpg",
+        "https://i.pinimg.com/736x/de/e6/66/dee666dc4f454f5cba5db6489da94334.jpg"
+    ];
+
+    for (let i = 0; i < 9; i++) {
+        const div = document.createElement('div');
+        div.classList.add('reel');
+        div.innerHTML = `<img src="${symbols[Math.floor(Math.random() * symbols.length)]}">`;
+        gridElement.appendChild(div);
+    }
+
+    const reels = document.querySelectorAll('.reel');
+
+    function changeBet(val) {
+        if (currentBet + val >= 1) {
+            currentBet += val;
+            betEl.innerText = currentBet.toFixed(2);
+        }
+    }
+
+    btnSpin.addEventListener('click', () => {
+        if (balance < currentBet) {
+            alert("Saldo insuficiente para esta aposta!");
+            return;
+        }
+        
+        // DEBITA O VALOR (Aqui você perde se não ganhar)
+        balance -= currentBet;
+        balanceEl.innerText = balance.toFixed(2);
+        
+        btnSpin.disabled = true;
+        winOverlay.classList.remove('show');
+        reels.forEach(r => {
+            r.classList.remove('winner');
+            r.querySelector('img').classList.add('spinning');
+        });
+
+        // Parada sequencial por colunas
+        [0, 1, 2].forEach(col => {
+            setTimeout(() => {
+                const indices = [col, col + 3, col + 6];
+                indices.forEach(i => {
+                    const img = reels[i].querySelector('img');
+                    img.classList.remove('spinning');
+                    img.src = symbols[Math.floor(Math.random() * symbols.length)];
+                });
+
+                if (col === 2) setTimeout(checkWin, 200);
+            }, 800 + (col * 500));
+        });
+    });
+
+    function checkWin() {
+        const lines = [
+            [0,1,2], [3,4,5], [6,7,8], [0,3,6], [1,4,7], [2,5,8], [0,4,8], [2,4,6]
+        ];
+        
+        let multiplier = 0;
+        lines.forEach(line => {
+            const [a, b, c] = line;
+            const sA = reels[a].querySelector('img').src;
+            const sB = reels[b].querySelector('img').src;
+            const sC = reels[c].querySelector('img').src;
+
+            if (sA === sB && sA === sC) {
+                reels[a].classList.add('winner');
+                reels[b].classList.add('winner');
+                reels[c].classList.add('winner');
+                multiplier += 5; // Cada linha ganha 5x o valor apostado
+            }
+        });
+
+        if (multiplier > 0) {
+            const totalWin = currentBet * multiplier;
+            showWin(totalWin);
+        } else {
+            btnSpin.disabled = false;
+        }
+    }
+
+    function showWin(amount) {
+        winAmountEl.innerText = `R$ ${amount.toFixed(2)}`;
+        winOverlay.classList.add('show');
+        
+        let start = balance;
+        let end = balance + amount;
+        balance = end;
+        
+        let interval = setInterval(() => {
+            start += 0.5;
+            if (start >= end) {
+                balanceEl.innerText = end.toFixed(2);
+                clearInterval(interval);
+                setTimeout(() => {
+                    winOverlay.classList.remove('show');
+                    btnSpin.disabled = false;
+                }, 2000);
+            } else {
+                balanceEl.innerText = start.toFixed(2);
+            }
+        }, 30);
+    }
+</script>
+
+</body>
+</html>

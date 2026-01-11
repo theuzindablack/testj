@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>UCO - Edição Design Pro</title>
+    <style>
+        :root {
+            --red: #dc251c; --yellow: #fcf604; --blue: #0493de; --green: #018d41; --black: #1f1b18;
+            --cardW: 65px; --cardH: 100px;
+        }
+        body, html { height: 100%; width: 100%; margin: 0; padding: 0; overflow: hidden; background: radial-gradient(#2a633d, #1a472a); font-family: 'Arial Black', sans-serif; }
+        
+        .game-field { display: grid; width: 100vw; height: 100vh; grid-template-columns: 140px 1fr 140px; grid-template-rows: 130px 1fr 220px; }
+        .player-area { display: flex; justify-content: center; align-items: center; flex-wrap: wrap; padding: 10px; transition: 0.3s; }
+        #bottom { grid-area: 3 / 2; align-self: center; gap: 5px; }
+        
+        .active-turn { background: rgba(255, 255, 255, 0.1); border-radius: 30px; box-shadow: 0 0 30px rgba(255, 215, 0, 0.3); }
+
+        /* DESIGN DAS CARTAS */
+        .card { width: var(--cardW); height: var(--cardH); background: white; border-radius: 8px; padding: 4px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); cursor: pointer; transition: 0.2s; position: relative; box-sizing: border-box; }
+        .card .bckg { width: 100%; height: 100%; border-radius: 5px; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; border: 1px solid rgba(0,0,0,0.1); }
+        .card .val { color: white; font-size: 1.2rem; text-shadow: 2px 2px 2px #000; z-index: 5; text-align: center; line-height: 1; }
+
+        /* CORES */
+        .r .bckg { background: var(--red); } .y .bckg { background: var(--yellow); }
+        .b .bckg { background: var(--blue); } .g .bckg { background: var(--green); }
+        .black .bckg { background: var(--black); }
+
+        /* DESIGN DO CORINGA (4 CORES) */
+        .wild-bg {
+            position: absolute; width: 200%; height: 200%;
+            background: conic-gradient(var(--red) 0% 25%, var(--blue) 25% 50%, var(--green) 50% 75%, var(--yellow) 75% 100%);
+            transform: rotate(45deg);
+        }
+
+        /* VERSO UCO */
+        .card.back { background: #fff; }
+        .card.back .bckg { background: var(--red); border: 2px solid white; }
+        .card.back .bckg::before { content: 'UCO'; color: #ffcc00; font-size: 0.8rem; transform: rotate(-45deg); background: #000; width: 140%; height: 30px; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 10px #000; }
+
+        #bottom .card:hover { transform: translateY(-25px) scale(1.1); z-index: 100; }
+
+        /* INTERFACE */
+        .btn-ui { display: none; padding: 12px 25px; font-size: 1rem; cursor: pointer; border-radius: 50px; border: none; font-family: 'Arial Black'; text-transform: uppercase; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 1000; }
+        #espelhinho-btn { background: #ffcc00; color: #000; position: fixed; bottom: 230px; left: 50%; transform: translateX(-50%); }
+        #win-screen { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 9000; flex-direction: column; justify-content: center; align-items: center; color: white; }
+        #color-modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 20px; z-index: 5000; text-align: center; border: 5px solid #333; }
+        .center { grid-area: 2 / 2; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 15px; }
+        #info-panel { color: white; background: rgba(0,0,0,0.3); padding: 10px 20px; border-radius: 10px; text-align: center; font-size: 0.9rem; border: 1px solid rgba(255,255,255,0.1); }
+    </style>
+</head>
+<body onload="init()">
+
+<div id="win-screen">
+    <h1 id="win-msg" style="font-size: 3rem; margin: 0;">FIM DE JOGO</h1>
+    <button id="restart-btn" class="btn-ui" style="display:block; background:#fff; color:#1a472a; margin-top:20px;" onclick="location.reload()">Jogar Novamente</button>
+</div>
+
+<button id="espelhinho-btn" class="btn-ui" onclick="doEspelhinho()">Fazer Espelhinho ✨</button>
+
+<div id="color-modal">
+    <h2 style="color:#333; margin-top:0">ESCOLHA A COR</h2>
+    <div style="display:flex; gap:15px;">
+        <button onclick="chooseColor('r')" style="width:60px; height:60px; border-radius:50%; background:var(--red); border:none; cursor:pointer;"></button>
+        <button onclick="chooseColor('y')" style="width:60px; height:60px; border-radius:50%; background:var(--yellow); border:none; cursor:pointer;"></button>
+        <button onclick="chooseColor('b')" style="width:60px; height:60px; border-radius:50%; background:var(--blue); border:none; cursor:pointer;"></button>
+        <button onclick="chooseColor('g')" style="width:60px; height:60px; border-radius:50%; background:var(--green); border:none; cursor:pointer;"></button>
+    </div>
+</div>
+
+<div class="game-field">
+    <div id="top" class="player-area"></div>
+    <div id="left" class="player-area"></div>
+    <div id="right" class="player-area"></div>
+    <div class="center">
+        <div id="info-panel">Aguarde...</div>
+        <div style="display:flex; gap:30px; align-items:center;">
+            <div class="card back" onclick="playerDrawAction()"><div class="bckg"></div></div>
+            <div id="discard-area"></div>
+        </div>
+    </div>
+    <div id="bottom" class="player-area"></div>
+</div>
+
+<script>
+    const COLORS = ['r', 'y', 'b', 'g'];
+    const VALUES = ['0','1','2','3','4','5','6','7','8','9','SKIP','REV','+2'];
+    let DECK = [], discardPile = [], hands = { bottom: [], left: [], top: [], right: [] };
+    let discardTop = "", activeColor = "", currentTurn = 0, clockwise = true, stack = 0;
+    let pendingEspelhinho = null;
+    const players = ['bottom', 'left', 'top', 'right'];
+
+    function createDeck() {
+        DECK = [];
+        COLORS.forEach(c => {
+            DECK.push('0'+c);
+            for(let i=1; i<=9; i++) { DECK.push(i+c); DECK.push(i+c); }
+            for(let i=0; i<2; i++) { DECK.push('SKIP'+c); DECK.push('REV'+c); DECK.push('+2'+c); }
+        });
+        for(let i=0; i<4; i++) { DECK.push('WILD'); DECK.push('+4WILD'); }
+        DECK.sort(() => Math.random() - 0.5);
+    }
+
+    function init() {
+        createDeck();
+        for (let p in hands) { hands[p] = []; for (let i = 0; i < 7; i++) hands[p].push(drawFromDeck()); }
+        discardTop = DECK.pop();
+        while(discardTop.includes('WILD')) { DECK.unshift(discardTop); discardTop = DECK.pop(); }
+        activeColor = discardTop.slice(-1);
+        updateUI();
+    }
+
+    function drawFromDeck() {
+        if (DECK.length === 0) { DECK = [...discardPile]; discardPile = []; DECK.sort(() => Math.random() - 0.5); }
+        return DECK.pop() || '1r';
+    }
+
+    function updateUI() {
+        const hex = { r: '#ff4d4d', y: '#fcf604', b: '#3399ff', g: '#2ecc71' }[activeColor];
+        document.getElementById('info-panel').innerHTML = `COR: <b style="color:${hex}">${activeColor.toUpperCase()}</b> | SENTIDO: ${clockwise ? '➡️' : '⬅️'}<br>${stack > 0 ? 'ACÚMULO: +' + stack : ''}`;
+        players.forEach((p, idx) => {
+            const el = document.getElementById(p); el.innerHTML = '';
+            el.classList.toggle('active-turn', currentTurn === idx);
+            hands[p].forEach((card, i) => el.innerHTML += createCardHTML(card, i, p !== 'bottom'));
+        });
+        document.getElementById('discard-area').innerHTML = createCardHTML(discardTop, -1, false);
+    }
+
+    function createCardHTML(code, i, isBack) {
+        if(isBack) return `<div class="card back" style="margin-left:-45px"><div class="bckg"></div></div>`;
+        
+        let isWild = code.includes('WILD');
+        let colorClass = isWild ? 'black' : code.slice(-1);
+        let label = isWild ? (code.includes('+4') ? '+4' : 'UCO') : code.replace(/[rybg]/g, '');
+        
+        let wildHtml = isWild ? '<div class="wild-bg"></div>' : '';
+        
+        return `<div class="card ${colorClass}" onclick="playCard(${i})" style="${i === -1 ? '' : 'margin-left:-25px'}">
+            <div class="bckg">${wildHtml}<span class="val">${label}</span></div>
+        </div>`;
+    }
+
+    function playCard(i) {
+        if (currentTurn !== 0) return;
+        const card = hands.bottom[i];
+        if (stack > 0 && !card.includes('+4')) return;
+        
+        let match = card.includes('WILD') || card.slice(-1) === activeColor || 
+                    (card.replace(/[rybg]/g, '') === discardTop.replace(/[rybg]/g, '') && !card.includes('WILD'));
+
+        if (match) {
+            const duplicates = hands.bottom.filter(c => c === card);
+            if (duplicates.length > 1) {
+                pendingEspelhinho = { card, index: i };
+                document.getElementById('espelhinho-btn').style.display = 'block';
+                setTimeout(() => { if(pendingEspelhinho) processPlay(pendingEspelhinho.index); }, 2500);
+            } else { processPlay(i); }
+        }
+    }
+
+    function doEspelhinho() {
+        if (!pendingEspelhinho) return;
+        const card = pendingEspelhinho.card;
+        const dups = hands.bottom.filter(c => c === card);
+        for(let j=0; j<dups.length; j++) hands.bottom.splice(hands.bottom.indexOf(card), 1);
+        document.getElementById('espelhinho-btn').style.display = 'none';
+        handleAction(card, card.includes('+4') ? 4 * dups.length : 0);
+        pendingEspelhinho = null;
+    }
+
+    function processPlay(i) {
+        if (!pendingEspelhinho && currentTurn !== 0) return;
+        const card = hands.bottom.splice(i, 1)[0];
+        document.getElementById('espelhinho-btn').style.display = 'none';
+        handleAction(card, card.includes('+4') ? 4 : 0);
+        pendingEspelhinho = null;
+    }
+
+    function handleAction(card, addStack) {
+        if(discardTop) discardPile.push(discardTop);
+        discardTop = card; stack += addStack;
+        if (!card.includes('WILD')) {
+            activeColor = card.slice(-1);
+            if (card.includes('REV')) clockwise = !clockwise;
+            if (card.includes('SKIP')) currentTurn = getNextIdx();
+            if (card.includes('+2')) {
+                let next = getNextIdx();
+                for(let j=0; j<2; j++) hands[players[next]].push(drawFromDeck());
+                currentTurn = next;
+            }
+        }
+        if (card.includes('WILD')) {
+            if(currentTurn === 0) document.getElementById('color-modal').style.display = 'block';
+            else { activeColor = COLORS[Math.floor(Math.random()*4)]; finishTurn(); }
+        } else finishTurn();
+    }
+
+    function chooseColor(c) { activeColor = c; document.getElementById('color-modal').style.display = 'none'; finishTurn(); }
+
+    function finishTurn() {
+        if(hands[players[currentTurn]].length === 0) {
+            document.getElementById('win-screen').style.display = 'flex';
+            document.getElementById('win-msg').innerText = currentTurn === 0 ? "VITÓRIA! 🎉" : "DERROTA! 😢";
+            return;
+        }
+        currentTurn = getNextIdx(); updateUI();
+        if (currentTurn !== 0) setTimeout(npcMove, 1200);
+    }
+
+    function getNextIdx() { return (currentTurn + (clockwise ? 1 : -1) + 4) % 4; }
+
+    function playerDrawAction() {
+        if (currentTurn !== 0) return;
+        if (stack > 0) { for(let j=0; j<stack; j++) hands.bottom.push(drawFromDeck()); stack = 0; }
+        else hands.bottom.push(drawFromDeck());
+        currentTurn = getNextIdx(); updateUI();
+        if (currentTurn !== 0) setTimeout(npcMove, 1200);
+    }
+
+    function npcMove() {
+        const p = players[currentTurn];
+        const h4 = hands[p].findIndex(c => c.includes('+4'));
+        if (stack > 0) {
+            if (h4 > -1) handleAction(hands[p].splice(h4, 1)[0], 4);
+            else { for(let j=0; j<stack; j++) hands[p].push(drawFromDeck()); stack = 0; finishTurn(); }
+            return;
+        }
+        const idx = hands[p].findIndex(c => c.includes('WILD') || c.slice(-1) === activeColor || (c.replace(/[rybg]/g, '') === discardTop.replace(/[rybg]/g, '') && !c.includes('WILD')));
+        if (idx > -1) handleAction(hands[p].splice(idx, 1)[0], 0);
+        else { hands[p].push(drawFromDeck()); finishTurn(); }
+    }
+</script>
+</body>
+</html>

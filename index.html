@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>2026 GAMES | Portal</title>
+    <title>2026 GAMES | Portal de Jogos</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             background: #2c1a4d;
             color: #fff;
-            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             overflow-x: hidden;
         }
 
@@ -27,22 +27,22 @@
         .container {
             padding: 30px 20px;
             display: grid;
-            /* Grid inteligente que cabe mais jogos conforme você adiciona */
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            /* Grid flexível: ajusta de 2 a 6 colunas dependendo da tela */
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 20px;
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto;
         }
 
         .game-card {
             aspect-ratio: 1 / 1;
-            border-radius: 24px;
+            border-radius: 22px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border-bottom: 8px solid rgba(0,0,0,0.2);
             text-decoration: none;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -53,15 +53,16 @@
             box-shadow: 0 15px 30px rgba(0,0,0,0.5);
         }
 
-        .game-icon { font-size: 65px; margin-bottom: 8px; filter: drop-shadow(2px 4px 0px rgba(0,0,0,0.1)); }
-        .game-title { font-weight: bold; font-size: 15px; text-transform: uppercase; text-align: center; }
+        .game-icon { font-size: 60px; margin-bottom: 8px; filter: drop-shadow(2px 3px 0px rgba(0,0,0,0.2)); }
+        .game-title { font-weight: bold; font-size: 14px; text-transform: uppercase; text-align: center; padding: 0 5px; }
 
         /* CORES DOS CARDS */
-        .card-city     { background: #00ff88; color: #053a24; } 
-        .card-escape   { background: #ff0055; color: #ffffff; } 
-        .card-neon     { background: #00f2ff; color: #003a3d; } 
-        .card-queimada { background: #ffcc00; color: #332200; } 
-        .card-capy     { background: #8BC34A; color: #ffffff; } /* Verde Capivara */
+        .card-city      { background: #00ff88; color: #053a24; } 
+        .card-escape    { background: #ff0055; color: #ffffff; } 
+        .card-neon      { background: #00f2ff; color: #003a3d; } 
+        .card-queimada  { background: #ffcc00; color: #332200; } 
+        .card-capy      { background: #8BC34A; color: #ffffff; } 
+        .card-tiger     { background: radial-gradient(circle, #ffcc00, #d4af37); color: #440000; border-bottom-color: #8b4513; }
 
         /* SISTEMA DE OVERLAY */
         #game-overlay {
@@ -79,7 +80,7 @@
             position: absolute;
             top: 15px; right: 15px;
             background: #fff; color: #000;
-            border: none; padding: 12px 20px;
+            border: none; padding: 12px 22px;
             border-radius: 40px; cursor: pointer;
             font-weight: 800; z-index: 10001;
             box-shadow: 0 4px 0 #bbb;
@@ -98,7 +99,7 @@
         .loader {
             width: 50px; height: 50px;
             border: 8px solid #3b2566;
-            border-top: 8px solid #8BC34A;
+            border-top: 8px solid #ffcc00;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -136,13 +137,18 @@
             <div class="game-title">Capy Road</div>
         </div>
 
+        <div class="game-card card-tiger" onclick="abrirJogo('./fortune-tiger.html')">
+            <div class="game-icon">🐯</div>
+            <div class="game-title">Fortune Tiger</div>
+        </div>
+
     </div>
 
     <div id="game-overlay">
         <button class="btn-exit" onclick="fecharJogo()">✕ SAIR</button>
         <div id="loading-screen">
             <div class="loader"></div>
-            <p style="margin-top:20px; font-weight:bold;">CARREGANDO SISTEMA...</p>
+            <p style="margin-top:20px; font-weight:bold;">CARREGANDO JOGO...</p>
         </div>
         <iframe id="game-frame" src=""></iframe>
     </div>

@@ -27,22 +27,22 @@
         .container {
             padding: 30px 20px;
             display: grid;
-            /* Ajusta automaticamente a quantidade de colunas */
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            /* Grid inteligente que cabe mais jogos conforme você adiciona */
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 20px;
-            max-width: 900px;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
         .game-card {
             aspect-ratio: 1 / 1;
-            border-radius: 20px;
+            border-radius: 24px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s ease-in-out;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             border-bottom: 8px solid rgba(0,0,0,0.2);
             text-decoration: none;
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
@@ -53,14 +53,15 @@
             box-shadow: 0 15px 30px rgba(0,0,0,0.5);
         }
 
-        .game-icon { font-size: 60px; margin-bottom: 10px; }
-        .game-title { font-weight: bold; font-size: 14px; text-transform: uppercase; text-align: center; }
+        .game-icon { font-size: 65px; margin-bottom: 8px; filter: drop-shadow(2px 4px 0px rgba(0,0,0,0.1)); }
+        .game-title { font-weight: bold; font-size: 15px; text-transform: uppercase; text-align: center; }
 
         /* CORES DOS CARDS */
-        .card-city   { background: #00ff88; color: #053a24; } 
-        .card-escape { background: #ff0055; color: #ffffff; } 
-        .card-neon   { background: #00f2ff; color: #003a3d; } 
-        .card-queimada { background: #ffcc00; color: #332200; } /* Amarelo Queimada */
+        .card-city     { background: #00ff88; color: #053a24; } 
+        .card-escape   { background: #ff0055; color: #ffffff; } 
+        .card-neon     { background: #00f2ff; color: #003a3d; } 
+        .card-queimada { background: #ffcc00; color: #332200; } 
+        .card-capy     { background: #8BC34A; color: #ffffff; } /* Verde Capivara */
 
         /* SISTEMA DE OVERLAY */
         #game-overlay {
@@ -97,7 +98,7 @@
         .loader {
             width: 50px; height: 50px;
             border: 8px solid #3b2566;
-            border-top: 8px solid #ffcc00;
+            border-top: 8px solid #8BC34A;
             border-radius: 50%;
             animation: spin 0.8s linear infinite;
         }
@@ -128,6 +129,11 @@
         <div class="game-card card-queimada" onclick="abrirJogo('./queimada.html')">
             <div class="game-icon">🏐</div>
             <div class="game-title">Queimada 3D</div>
+        </div>
+
+        <div class="game-card card-capy" onclick="abrirJogo('./capy-road.html')">
+            <div class="game-icon">🐹</div>
+            <div class="game-title">Capy Road</div>
         </div>
 
     </div>
